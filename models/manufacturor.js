@@ -4,7 +4,7 @@ const manufacturorSchema = new mongoose.Schema(
   {
     from: String,
     to: String,
-    quntity: Number,
+    quantity: Number,
     price: Number,
     pickup: String,
     transporter: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

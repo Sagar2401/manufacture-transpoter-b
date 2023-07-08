@@ -4,7 +4,7 @@ const User = require("../models/userModel");
 
 const addManufacturorData = async (req, res) => {
   try {
-    const { from, to, quntity, pickup, transporter } = req.body;
+    const { from, to, quantity, pickup, transporter } = req.body;
 
     const user = await User.findOne({ _id: transporter });
 
@@ -19,10 +19,10 @@ const addManufacturorData = async (req, res) => {
     const addData = await Manufacturor.create({
       from,
       to,
-      quntity,
+      quantity,
       pickup,
       transporter,
-      create_by: req.user._id,
+      created_by: req.user._id,
     });
 
     return res.status(201).json({
@@ -32,9 +32,46 @@ const addManufacturorData = async (req, res) => {
         order_id: addData._id,
         from: addData.from,
         to: addData.to,
-        quntity: addData.quntity,
-        pickup: addData.quntity,
+        quantity: addData.quantity,
+        pickup: addData.quantity,
       },
+    });
+  } catch (error) {
+    return responseError(res, error);
+  }
+};
+const updatePriceOfOrder = async (req, res) => {
+  try {
+    const { order_id, price } = req.body;
+
+    const findOrder = await Manufacturor.findOne({ _id: order_id });
+    console.log("dfsdf", findOrder);
+    if (!findOrder) {
+      return res.status(400).json({
+        status: false,
+        message: "order not found",
+        data: null,
+      });
+    }
+    console.log("dfsdf", findOrder.transporter.toString(), req.user._id);
+    if (findOrder.transporter.toString() !== req.user._id.toString()) {
+      return res.status(400).json({
+        status: false,
+        message: "you can only update price of your request",
+        data: null,
+      });
+    }
+
+    const updateData = await Manufacturor.findOneAndUpdate(
+      { _id: order_id },
+      { price },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      status: true,
+      message: "Price Updated Successfully",
+      data: updateData,
     });
   } catch (error) {
     return responseError(res, error);
@@ -43,9 +80,16 @@ const addManufacturorData = async (req, res) => {
 
 const myManufacturorData = async (req, res) => {
   try {
-    const findData = await Manufacturor.find({ created_by: req.user._id });
+    let findData;
 
-    if (!findData.lenght) {
+    if (req.user.isManufacturor) {
+      findData = await Manufacturor.find({ created_by: req.user._id });
+    } else {
+      findData = await Manufacturor.find({ transporter: req.user._id });
+    }
+
+    console.log(findData);
+    if (!findData.length) {
       return res.status(400).json({
         status: false,
         message: "Transporter not found",
@@ -63,4 +107,31 @@ const myManufacturorData = async (req, res) => {
   }
 };
 
-module.exports = { addManufacturorData, myManufacturorData };
+const allOrderRequest = async (req, res) => {
+  try {
+    const findData = await Manufacturor.find({ transporter: req.user._id });
+
+    if (!findData.length) {
+      return res.status(400).json({
+        status: false,
+        message: "no orders found",
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "successfully",
+      data: findData,
+    });
+  } catch (error) {
+    return responseError(res, error);
+  }
+};
+
+module.exports = {
+  addManufacturorData,
+  myManufacturorData,
+  updatePriceOfOrder,
+  allOrderRequest,
+};

@@ -10,9 +10,9 @@ const {
 const userRegister = async (req, res) => {
   try {
     const validateBody = joi.object({
-      first_name: joi.string().required().min(3).max(30),
-      last_name: joi.string().required().min(3).max(30),
-      address: joi.string().required().min(3).max(30),
+      first_name: joi.string().required().min(3).max(50),
+      last_name: joi.string().required().min(3).max(50),
+      address: joi.string().required(),
       email: joi.string().required().email(),
       password: joi.string().required().min(4).max(30),
       isManufacturor: joi.boolean().required(),
