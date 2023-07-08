@@ -18,8 +18,14 @@ dbConnection();
 const port = process.env.PORT || 5001;
 
 app.use(express.json());
-app.use(cors());
-
+app.use(
+  cors({
+    credentials: true,
+    origin: (_origin, callback) => {
+      callback(null, true);
+    },
+  })
+);
 app.use("/api", require("./routes"));
 
 app.get("/", (req, res) => {
