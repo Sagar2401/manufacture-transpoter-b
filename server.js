@@ -37,9 +37,24 @@ http.listen(port, () => {
 });
 
 io.on("connection", (socket) => {
-  console.log("a user connected");
+  socket.on("disconnect", () => {});
+});
 
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+  global.chatSocket = socket;
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+  });
+
+  socket.on("send-msg", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    console.log(sendUserSocket);
+
+    if (sendUserSocket) {
+      socket
+        .to(sendUserSocket)
+        .emit("msg-recieve", { messages: data.messages, time: new Date() });
+    }
   });
 });
