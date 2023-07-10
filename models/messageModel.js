@@ -26,6 +26,11 @@ const MessageSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
+    order_id:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Manufacturor",
+      required: true,
+    },
   },
   {
     timestamps: true,

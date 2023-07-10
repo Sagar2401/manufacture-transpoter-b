@@ -61,42 +61,57 @@ module.exports = { getMyChats, createNewChat, createNewGroup };
 
 //---------------------------------------------------------------------------------
 const Messages = require("../models/messageModel");
+const Manufacturor = require("../models/manufacturor");
 
 module.exports.getMessages = async (req, res, next) => {
   try {
-    const { from, to } = req.body;
+    const { order_id } = req.body;
 
-    const messages = await Messages.find({
-      users: {
-        $all: [from, to],
-      },
-    }).sort({ updatedAt: 1 });
+    const findOrder = await Manufacturor.findOne({ _id: order_id });
+
+
+    if(!findOrder){
+      return res.status(404).json({
+        message:"Order not found"
+      })
+    }
+
+    const messages = await Messages.find({order_id}).sort({ updatedAt: 1 });
 
     const projectedMessages = messages.map((msg) => {
       return {
-        fromSelf: msg.sender.toString() === from,
+        fromSelf: msg.sender.toString() === req.user._id,
         message: msg.message.text,
       };
     });
     res.json(projectedMessages);
   } catch (ex) {
-    next(ex);
+    return responseError(res,ex)
   }
 };
 
 module.exports.addMessage = async (req, res, next) => {
   try {
-    const { from, to, message } = req.body;
-    console.log(req.body);
+    const { order_id, message } = req.body;
+
+    const findOrder = await Manufacturor.findOne({ _id: order_id });
+
+
+    if(!findOrder){
+      return res.status(404).json({
+        message:"Order not found"
+      })
+    }
+
     const data = await Messages.create({
       message: { text: message },
-      users: [from, to],
-      sender: from,
+      users: [findOrder.created_by, findOrder.transporter],
+      sender: req.user._id,
     });
 
     if (data) return res.json({ msg: "Message added successfully." });
     else return res.json({ msg: "Failed to add message to the database" });
   } catch (ex) {
-    next(ex);
+    return responseError(res,ex)
   }
 };
